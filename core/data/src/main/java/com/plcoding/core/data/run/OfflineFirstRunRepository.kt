@@ -44,6 +44,7 @@ class OfflineFirstRunRepository(
             is Result.Error -> result.asEmptyDataResult()
             is Result.Success -> {
                 applicationScope.async {
+
                     localRunDataSource.upsertRuns(result.data).asEmptyDataResult()
                 }.await()
             }

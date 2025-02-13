@@ -6,14 +6,35 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlin.time.Duration.Companion.milliseconds
 
+//fun RunDto.toRun(): Run {
+//    return Run(
+//        id = id,
+//        duration = durationMillis.milliseconds,
+//        dateTimeUtc = Instant.parse(dateTimeUtc)
+//            .atZone(ZoneId.of("UTC")),
+//        distanceMeters = distanceMeters,
+//        location = Location(lat, lon),
+//        maxSpeedKmh = maxSpeedKmh,
+//        totalElevationMeters = totalElevationMeters,
+//        mapPictureUrl = mapPictureUrl
+//    )
+//}
+
+import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
+
+
 fun RunDto.toRun(): Run {
+    val formatter = DateTimeFormatter.ofPattern("HH-mm-ss dd-MM-yyyy")
+    val localDateTime = LocalDateTime.parse(dateTimeUtc, formatter)
+    val instant = localDateTime.atZone(ZoneId.of("UTC")).toInstant()
+
     return Run(
         id = id,
         duration = durationMillis.milliseconds,
-        dateTimeUtc = Instant.parse(dateTimeUtc)
-            .atZone(ZoneId.of("UTC")),
+        dateTimeUtc = instant.atZone(ZoneId.of("UTC")),
         distanceMeters = distanceMeters,
-        location = Location(lat, long),
+        location = Location(lat, lon),
         maxSpeedKmh = maxSpeedKmh,
         totalElevationMeters = totalElevationMeters,
         mapPictureUrl = mapPictureUrl
@@ -26,7 +47,7 @@ fun Run.toCreateRunRequest(): CreateRunRequest {
         durationMillis = duration.inWholeMilliseconds,
         distanceMeters = distanceMeters,
         lat = location.lat,
-        long = location.long,
+        lon = location.long,
         avgSpeedKmh = avgSpeedKmh,
         maxSpeedKmh = maxSpeedKmh,
         totalElevationMeters = totalElevationMeters,

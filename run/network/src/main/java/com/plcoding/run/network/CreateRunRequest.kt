@@ -8,7 +8,7 @@ data class CreateRunRequest(
     val distanceMeters: Int,
     val epochMillis: Long,
     val lat: Double,
-    val long: Double,
+    val lon: Double,
     val avgSpeedKmh: Double,
     val maxSpeedKmh: Double,
     val totalElevationMeters: Int,

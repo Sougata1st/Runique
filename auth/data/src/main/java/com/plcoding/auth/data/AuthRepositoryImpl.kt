@@ -17,7 +17,7 @@ class AuthRepositoryImpl(
 
     override suspend fun login(email: String, password: String): EmptyResult<DataError.Network> {
         val result = httpClient.post<LoginRequest, LoginResponse>(
-            route = "/login",
+            route = "/auth/login",
             body = LoginRequest(
                 email = email,
                 password = password
@@ -26,9 +26,9 @@ class AuthRepositoryImpl(
         if(result is Result.Success) {
             sessionStorage.set(
                 AuthInfo(
-                    accessToken = result.data.accessToken,
-                    refreshToken = result.data.refreshToken,
-                    userId = result.data.userId
+                    accessToken = result.data.data.accessToken,
+                    refreshToken = result.data.data.refreshToken,
+                    userId = ""
                 )
             )
         }
@@ -37,10 +37,11 @@ class AuthRepositoryImpl(
 
     override suspend fun register(email: String, password: String): EmptyResult<DataError.Network> {
         return httpClient.post<RegisterRequest, Unit>(
-            route = "/register",
+            route = "/auth/register",
             body = RegisterRequest(
                 email = email,
-                password = password
+                password = password,
+                name = "Sougata"
             )
         )
     }

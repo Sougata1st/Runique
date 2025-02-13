@@ -4,6 +4,7 @@ import com.plcoding.core.data.BuildConfig
 import com.plcoding.core.domain.AuthInfo
 import com.plcoding.core.domain.SessionStorage
 import com.plcoding.core.domain.util.Result
+import com.sougata.core.data.networking.refreshApi.RefreshApiService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.Auth
@@ -18,7 +19,10 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import timber.log.Timber
 
 class HttpClientFactory(
@@ -26,6 +30,15 @@ class HttpClientFactory(
 ) {
 
     fun build(): HttpClient {
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://e-store-user-service.onrender.com/") // Set your base URL
+            .addConverterFactory(GsonConverterFactory.create()) // Add Gson converter
+            .build()
+
+        // Create an instance of the ApiService
+        val apiService = retrofit.create(RefreshApiService::class.java)
+        
         return HttpClient(CIO) {
             install(ContentNegotiation) {
                 json(
@@ -44,45 +57,58 @@ class HttpClientFactory(
             }
             defaultRequest {
                 contentType(ContentType.Application.Json)
-                header("x-api-key", BuildConfig.API_KEY)
+
+                val authInfo = runBlocking {
+                    sessionStorage.get()
+                }
+
+                if (authInfo != null) {
+                    headers.append("Authorization", "Bearer ${authInfo.accessToken}")
+                }
             }
             install(Auth) {
                 bearer {
-                    loadTokens {
-                        val info = sessionStorage.get()
-                        BearerTokens(
-                            accessToken = info?.accessToken ?: "",
-                            refreshToken = info?.refreshToken ?: ""
-                        )
-                    }
+//                    loadTokens {
+//                        val info = sessionStorage.get()
+//                        BearerTokens(
+//                            accessToken = info?.accessToken ?: "",
+//                            refreshToken = info?.refreshToken ?: ""
+//                        )
+//                    }
                     refreshTokens {
-                        val info = sessionStorage.get()
-                        val response = client.post<AccessTokenRequest, AccessTokenResponse>(
-                            route = "/accessToken",
-                            body = AccessTokenRequest(
-                                refreshToken = info?.refreshToken ?: "",
-                                userId = info?.userId ?: ""
+                        val authInfo = sessionStorage.get()
+                        val response = try {
+                            // Perform the POST request with Retrofit
+                            val tokenResponse = apiService.getAccessToken(
+                                AccessTokenRequest(authInfo?.refreshToken ?: "")
                             )
-                        )
-
-                        if(response is Result.Success) {
-                            val newAuthInfo = AuthInfo(
-                                accessToken = response.data.accessToken,
-                                refreshToken = info?.refreshToken ?: "",
-                                userId = info?.userId ?: ""
-                            )
-                            sessionStorage.set(newAuthInfo)
-
-                            BearerTokens(
-                                accessToken = newAuthInfo.accessToken,
-                                refreshToken = newAuthInfo.refreshToken
-                            )
-                        } else {
-                            BearerTokens(
-                                accessToken = "",
-                                refreshToken = ""
-                            )
+                            println("This is successful ${tokenResponse.isSuccessful}")
+                            if (tokenResponse.isSuccessful) {
+                                val data = tokenResponse.body()?.data
+                                if (data != null) {
+                                    println("This is data ${data.accessToken}")
+                                    sessionStorage.set(
+                                        AuthInfo(
+                                            accessToken = data.accessToken,
+                                            refreshToken = data.refreshToken,
+                                            userId = "jabcka"
+                                        )
+                                    )
+                                    BearerTokens(
+                                        accessToken = data.accessToken,
+                                        refreshToken = data.refreshToken
+                                    )
+                                } else {
+                                    BearerTokens(accessToken = "", refreshToken = "")
+                                }
+                            } else {
+                                BearerTokens(accessToken = "", refreshToken = "")
+                            }
+                        } catch (e: Exception) {
+                            BearerTokens(accessToken = "", refreshToken = "")
                         }
+                        
+                        response
                     }
                 }
             }

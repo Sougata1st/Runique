@@ -1,11 +1,11 @@
 package com.plcoding.core.data.networking
 
-import android.provider.ContactsContract.Data
 import com.plcoding.core.data.BuildConfig
 import com.plcoding.core.domain.util.DataError
 import com.plcoding.core.domain.util.Result
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -13,47 +13,66 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
+import io.ktor.content.TextContent
+import io.ktor.http.HttpMethod
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 
 suspend inline fun <reified Response: Any> HttpClient.get(
+    baseUrl: String = BuildConfig.BASE_URL,
     route: String,
     queryParameters: Map<String, Any?> = mapOf()
 ): Result<Response, DataError.Network> {
     return safeCall {
-        get {
-            url(constructRoute(route))
+        val builder = HttpRequestBuilder().apply {
+            url(constructRoute(route, baseUrl = baseUrl))
+            method = HttpMethod.Get
             queryParameters.forEach { (key, value) ->
                 parameter(key, value)
             }
         }
+        println("The curl is \n ${toCurlCommand(builder)}") // Log cURL
+        get(builder)
     }
 }
 
 suspend inline fun <reified Request, reified Response: Any> HttpClient.post(
+    baseUrl: String = BuildConfig.BASE_URL,
+    queryParameters: Map<String, Any?> = mapOf(),
     route: String,
     body: Request
 ): Result<Response, DataError.Network> {
     return safeCall {
-        post {
-            url(constructRoute(route))
+        val builder = HttpRequestBuilder().apply {
+            url(constructRoute(route, baseUrl = baseUrl))
+            method = HttpMethod.Post
+            queryParameters.forEach{(key, value) ->
+                parameter(key, value)
+            }
             setBody(body)
         }
+        println("The curl is \n ${toCurlCommand(builder)}") // Log cURL
+        post(builder)
     }
 }
 
 suspend inline fun <reified Response: Any> HttpClient.delete(
+    baseUrl: String = BuildConfig.BASE_URL,
     route: String,
     queryParameters: Map<String, Any?> = mapOf()
 ): Result<Response, DataError.Network> {
     return safeCall {
-        delete {
-            url(constructRoute(route))
-            queryParameters.forEach { (key, value) ->
-                parameter(key, value)
+        val builder = HttpRequestBuilder()
+            .apply {
+                url(constructRoute(route, baseUrl = baseUrl))
+                method = HttpMethod.Delete
+                queryParameters.forEach { (key, value) ->
+                    parameter(key, value)
+                }
             }
-        }
+        println("The curl is \n ${toCurlCommand(builder)}") // Log cURL
+        delete(builder)
     }
 }
 
@@ -88,10 +107,21 @@ suspend inline fun <reified T> responseToResult(response: HttpResponse): Result<
     }
 }
 
-fun constructRoute(route: String): String {
+fun constructRoute(route: String,baseUrl: String = BuildConfig.BASE_URL): String {
     return when {
-        route.contains(BuildConfig.BASE_URL) -> route
-        route.startsWith("/") -> BuildConfig.BASE_URL + route
-        else -> BuildConfig.BASE_URL + "/$route"
+        route.contains(baseUrl) -> route
+        route.startsWith("/") -> baseUrl + route
+        else -> "$baseUrl/$route"
     }
+}
+
+
+fun toCurlCommand(builder: HttpRequestBuilder): String {
+    val url = builder.url.buildString()
+    val headers = builder.headers.entries().joinToString(" ") {
+        """-H "${it.key}: ${it.value.joinToString(",")}""""
+    }
+    val data = (builder.body as? TextContent)?.text ?: ""
+
+    return "curl -X ${builder.method.value} $headers '$url' -d '$data'"
 }
