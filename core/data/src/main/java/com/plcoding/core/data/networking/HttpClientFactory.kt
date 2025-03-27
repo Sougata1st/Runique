@@ -1,5 +1,6 @@
 package com.plcoding.core.data.networking
 
+import android.util.Log
 import com.plcoding.core.data.BuildConfig
 import com.plcoding.core.domain.AuthInfo
 import com.plcoding.core.domain.SessionStorage
@@ -62,7 +63,7 @@ class HttpClientFactory(
                     sessionStorage.get()
                 }
 
-                if (authInfo != null) {
+                if (authInfo?.accessToken != null && authInfo.accessToken.isNotEmpty() && authInfo.refreshToken.isNotEmpty()) {
                     headers.append("Authorization", "Bearer ${authInfo.accessToken}")
                 }
             }
