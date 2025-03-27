@@ -22,16 +22,15 @@ Runique is a multi-module running tracker app built using **Jetpack Compose** wi
 ## ⚠️ Disclaimer
 
 To start the backend, follow these steps:
-1. **Hit the Backend URL**:
-    ```bash
-    https://runrequest-service.onrender.com
-    ```
-2. **Run the Backend class file**:
-    ```bash
-    java ConcurrentApiCaller
-   
-   https://drive.google.com/file/d/1NR6pQlaEMbLLXzMvfd08MzsvZu6w5Q4D/view?usp=sharing
-    ```
+
+- **Hit the Backend URL**:  
+  👉 [Runique Backend on Render](https://runrequest-service.onrender.com)
+
+- **Run the Backend Class File**:  
+  👉 [Download `ConcurrentApiCaller` Class](https://drive.google.com/file/d/1NR6pQlaEMbLLXzMvfd08MzsvZu6w5Q4D/view?usp=sharing)
+  ```bash
+  java ConcurrentApiCaller
+  ```
 > **Note**: The backend is hosted on **Render's free service** and may take a few minutes to wake up if inactive.
 
 ---
@@ -40,16 +39,16 @@ To start the backend, follow these steps:
 
 Here are the basic architectural and project-level insights:
 
-![Project Overview](images/app__overview.png)  
-![Software Architecture](images/app_architecture.png.webp)
+<img src="images/app__overview.png" alt="Project Overview" width="100%"/>  
+<img src="images/app_architecture.png.webp" alt="Software Architecture" width="100%"/>  
 
 ---
 
 ## 📱 Introduction
 
-Runique offers a seamless experience for tracking, analyzing, and managing your runs. Here's the intro screen of the app:
+Runique offers a seamless experience for tracking, analyzing, and managing your runs.
 
-![Intro Screen](images/intro.png)
+<img src="images/intro.png" alt="Intro Screen" width="300px"/>
 
 ---
 
@@ -58,10 +57,10 @@ Runique offers a seamless experience for tracking, analyzing, and managing your 
 Runique uses **Bearer Authentication** for secure login and registration.
 
 - **Login Screen**  
-  ![Login Screen](images/login.png)
+  <img src="images/login.png" alt="Login Screen" width="300px"/>
 
 - **Registration Screen**  
-  ![Registration Screen](images/register.png)
+  <img src="images/register.png" alt="Registration Screen" width="300px"/>
 
 ---
 
@@ -70,10 +69,10 @@ Runique uses **Bearer Authentication** for secure login and registration.
 The app handles **runtime permissions** effectively. If a user denies permissions, a dialog explains why access is necessary.
 
 - **Permission Request Screen**  
-  ![Permission Request](images/permission.png)
+  <img src="images/permission.png" alt="Permission Request" width="300px"/>
 
 - **Permission Explanation Dialog**  
-  ![Permission Dialog](images/dialog.png)
+  <img src="images/dialog.png" alt="Permission Dialog" width="300px"/>
 
 ---
 
@@ -85,7 +84,7 @@ Runique tracks your runs in **real-time** using a foreground service. The polyli
 - **Medium (Yellow)**
 - **Slow (Green)**
 
-![Location Tracking](images/run_screen.png)
+<img src="images/run_screen.png" alt="Location Tracking" width="300px"/>  
 
 ---
 
@@ -97,7 +96,7 @@ Manage and analyze all your runs in one place. This screen displays:
 - **Map Overview**
 - **Start New Run Button**
 
-![Run Overview](images/home.png)
+<img src="images/home.png" alt="Run Overview Screen" width="300px"/>  
 
 ---
 
@@ -110,19 +109,19 @@ Gain insights into your running performance with detailed analytics:
 - **Average Distance per KM**
 - **Average Pace per Run**
 
-![Analytics Screen](images/analytics.png)
+<img src="images/analytics.png" alt="Analytics Screen" width="300px"/>  
 
 ---
 
 ## 🤝 Contribute & Support
 
 Want to contribute? Follow these steps:
-1. Fork the repository
-2. Create a branch (`git checkout -b feature/YourFeature`)
-3. Commit your changes (`git commit -m 'Add YourFeature'`)
-4. Push to the branch (`git push origin feature/YourFeature`)
-5. Create a Pull Request
+1. **Fork the repository**
+2. **Create a branch** (`git checkout -b feature/YourFeature`)
+3. **Commit your changes** (`git commit -m 'Add YourFeature'`)
+4. **Push to the branch** (`git push origin feature/YourFeature`)
+5. **Create a Pull Request**
 
 ---
 
-⭐ If you like this project, **don't forget to star the repo!** 😊
+⭐ **If you like this project, don't forget to star the repo!** 😊
