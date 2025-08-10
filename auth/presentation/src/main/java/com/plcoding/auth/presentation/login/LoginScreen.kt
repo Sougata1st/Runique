@@ -188,6 +188,7 @@ private fun LoginScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun LoginScreenPreview() {

@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalFoundationApi::class)
 
 package com.plcoding.core.presentation.designsystem.components
 
@@ -53,6 +52,7 @@ import com.plcoding.core.presentation.designsystem.R
 import com.plcoding.core.presentation.designsystem.RuniqueGray
 import com.plcoding.core.presentation.designsystem.RuniqueTheme
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RuniquePasswordTextField(
     state: TextFieldState,
@@ -161,6 +161,7 @@ fun RuniquePasswordTextField(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 private fun RuniqueTextFieldPreview() {
