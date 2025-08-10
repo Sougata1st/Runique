@@ -12,6 +12,7 @@ import com.plcoding.run.location.di.locationModule
 import com.plcoding.run.network.di.networkModule
 import com.plcoding.run.presentation.di.runPresentationModule
 import com.plcoding.runique.di.appModule
+import di.firebaseModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
@@ -44,6 +45,7 @@ class RuniqueApp: Application() {
                 databaseModule,
                 networkModule,
                 runDataModule,
+                firebaseModule
             )
         }
     }

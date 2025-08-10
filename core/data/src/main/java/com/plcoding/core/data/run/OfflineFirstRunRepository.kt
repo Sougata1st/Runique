@@ -1,6 +1,6 @@
 package com.plcoding.core.data.run
 
-import com.plcoding.core.data.networking.get
+import android.util.Log
 import com.plcoding.core.database.dao.RunPendingSyncDao
 import com.plcoding.core.database.mappers.toRun
 import com.plcoding.core.domain.SessionStorage
@@ -32,7 +32,6 @@ class OfflineFirstRunRepository(
     private val runPendingSyncDao: RunPendingSyncDao,
     private val sessionStorage: SessionStorage,
     private val syncRunScheduler: SyncRunScheduler,
-    private val client: HttpClient
 ): RunRepository {
 
     override fun getRuns(): Flow<List<Run>> {
@@ -156,17 +155,5 @@ class OfflineFirstRunRepository(
 
     override suspend fun deleteAllRuns() {
         localRunDataSource.deleteAllRuns()
-    }
-
-    override suspend fun logout(): EmptyResult<DataError.Network> {
-        val result = client.get<Unit>(
-            route = "/logout"
-        ).asEmptyDataResult()
-
-        client.plugin(Auth).providers.filterIsInstance<BearerAuthProvider>()
-            .firstOrNull()
-            ?.clearToken()
-
-        return result
     }
 }

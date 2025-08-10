@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.plcoding.core.domain.SessionStorage
+import com.plcoding.core.domain.run.RemoteRunDataSource
 import com.plcoding.core.domain.run.RunRepository
 import com.plcoding.core.domain.run.SyncRunScheduler
 import com.plcoding.run.presentation.run_overview.mapper.toRunUi
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
 class RunOverviewViewModel(
+    private val remoteRunDataSource: RemoteRunDataSource,
     private val runRepository: RunRepository,
     private val syncRunScheduler: SyncRunScheduler,
     private val applicationScope: CoroutineScope,
@@ -60,7 +62,7 @@ class RunOverviewViewModel(
         applicationScope.launch {
             syncRunScheduler.cancelAllSyncs()
             runRepository.deleteAllRuns()
-            runRepository.logout()
+            remoteRunDataSource.logout()
             sessionStorage.set(null)
         }
     }

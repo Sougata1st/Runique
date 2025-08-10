@@ -22,6 +22,10 @@ import kotlin.time.Duration.Companion.milliseconds
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 
 fun RunDto.toRun(): Run {
@@ -37,12 +41,15 @@ fun RunDto.toRun(): Run {
         location = Location(lat, lon),
         maxSpeedKmh = maxSpeedKmh,
         totalElevationMeters = totalElevationMeters,
-        mapPictureUrl = mapPictureUrl
+        mapPictureUrl = mapPictureUrl,
     )
 }
 
-fun Run.toCreateRunRequest(): CreateRunRequest {
+fun Run.toCreateRunRequest(
+    mapPictureUrl: String
+): CreateRunRequest {
     return CreateRunRequest(
+        mapPictureUrl = mapPictureUrl,
         id = id!!,
         durationMillis = duration.inWholeMilliseconds,
         distanceMeters = distanceMeters,
@@ -52,5 +59,19 @@ fun Run.toCreateRunRequest(): CreateRunRequest {
         maxSpeedKmh = maxSpeedKmh,
         totalElevationMeters = totalElevationMeters,
         epochMillis = dateTimeUtc.toEpochSecond() * 1000L
+    )
+}
+
+
+fun CreateRunRequest.toRun(): Run {
+    return Run(
+        id = id.ifBlank { null },
+        duration = durationMillis.toDuration(DurationUnit.MILLISECONDS),
+        dateTimeUtc = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneOffset.UTC),
+        distanceMeters = distanceMeters,
+        location = Location(lat = lat, long = lon),
+        maxSpeedKmh = maxSpeedKmh,
+        totalElevationMeters = totalElevationMeters,
+        mapPictureUrl = mapPictureUrl
     )
 }

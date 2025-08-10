@@ -51,6 +51,10 @@ gradlePlugin {
             id = "runique.jvm.ktor"
             implementationClass = "JvmKtorConventionPlugin"
         }
+        register("firebaseAndroid"){
+            id = "runique.firebase.android"
+            implementationClass = "FirebaseConventionPlugin"
+        }
     }
 }
 

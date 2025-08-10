@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.runique.android.application.compose)
     alias(libs.plugins.runique.jvm.ktor)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -78,6 +79,7 @@ dependencies {
     implementation(projects.run.data)
     implementation(projects.run.location)
     implementation(projects.run.network)
+    implementation(projects.firebase)
 }
 
 //java {
