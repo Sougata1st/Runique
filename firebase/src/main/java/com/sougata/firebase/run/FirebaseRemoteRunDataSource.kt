@@ -16,11 +16,7 @@ import com.plcoding.run.network.RunDto
 import com.plcoding.run.network.toCreateRunRequest
 import com.plcoding.run.network.toRun
 import com.sougata.firebase.auth.toNetworkError
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import java.util.UUID
 
 class FirebaseRemoteRunDataSource(
@@ -30,64 +26,75 @@ class FirebaseRemoteRunDataSource(
     private val firebaseAuth: FirebaseAuth
 ): RemoteRunDataSource {
     override suspend fun getRuns(): Result<List<Run>, DataError.Network> {
-        val userId = sessionStorage.get()?.userId
+        val rawUserId = sessionStorage.get()?.userId
             ?: return Result.Error(DataError.Network.UNAUTHORIZED)
+        val userId = rawUserId.toRtdbKey()
 
         return try {
-            val snapshot = db
-                .getReference(userId)
-                .child("Runs")
-                .get()
-                .await()
-
-            val runs = snapshot.children.mapNotNull { snap ->
-                snap.getValue(RunDto::class.java)?.toRun()
-            }
-
+            val snapshot = db.reference.child(userId).child("Runs").get().await()
+            val runs = snapshot.children.mapNotNull { it.getValue(CreateRunRequest::class.java)?.toRun() }
+            android.util.Log.d("Sougata", "getRuns -> ${runs.size} runs")
             Result.Success(runs)
         } catch (t: Throwable) {
+            android.util.Log.e("Sougata", "getRuns failed", t)
             Result.Error(t.toNetworkError())
         }
     }
+
 
     override suspend fun postRun(
         run: Run,
         mapPicture: ByteArray
-    ): Result<Run, DataError.Network> = withContext(Dispatchers.IO) {
-        val userId = sessionStorage.get()?.userId
-            ?: return@withContext Result.Error(DataError.Network.UNAUTHORIZED)
+    ): Result<Run, DataError.Network> {
+        val rawUserId = sessionStorage.get()?.userId
+            ?: return Result.Error(DataError.Network.UNAUTHORIZED)
 
-        try {
-            withTimeout(5_000L) { // ⏱️ 5 seconds
-                val runsRef = db.getReference(userId).child("Runs")
+        // Prefer the auth UID if you can store it in session:
+        // val userId = firebaseAuth.currentUser?.uid ?: return Result.Error(DataError.Network.UNAUTHORIZED)
 
-                val runId = if (run.id.isNullOrBlank()) {
-                    java.util.UUID.randomUUID().toString()
-                } else run.id!!
+        // Otherwise sanitize keys for RTDB (avoid ., #, $, [, ], /)
+        val userId = rawUserId.toRtdbKey()
 
-                val imageRef = storage.reference
-                    .child("runs")
-                    .child(userId)
-                    .child("$runId.png")
+        return try {
+            val runsRef = db.reference.child(userId).child("Runs")
 
-                val metadata = com.google.firebase.storage.StorageMetadata.Builder()
-                    .setContentType("image/png")
-                    .build()
+            val runId = if (run.id.isNullOrBlank()) {
+                java.util.UUID.randomUUID().toString()
+            } else run.id!!
 
-                imageRef.putBytes(mapPicture, metadata).await()
-                val imageUrl = imageRef.downloadUrl.await().toString()
+            // upload image
+            val imageRef = storage.reference
+                .child("runs")
+                .child(userId)
+                .child("$runId.png")
 
-                val dto: CreateRunRequest = run.toCreateRunRequest(mapPictureUrl = imageUrl).copy(id = runId)
-                runsRef.child(runId).setValue(dto).await()
+            val metadata = com.google.firebase.storage.StorageMetadata.Builder()
+                .setContentType("image/png")
+                .build()
 
-                Result.Success(dto.toRun() ?: run.copy(id = runId))
-            }
-        } catch (e: TimeoutCancellationException) {
-            Result.Error(DataError.Network.REQUEST_TIMEOUT)
+            imageRef.putBytes(mapPicture, metadata).await()
+            val imageUrl = imageRef.downloadUrl.await().toString()
+
+            // write dto
+            val dto = run.toCreateRunRequest(mapPictureUrl = imageUrl).copy(id = runId)
+            runsRef.child(runId).setValue(dto).await()
+
+            Result.Success(dto.toRun() ?: run.copy(id = runId))
         } catch (t: Throwable) {
+            android.util.Log.e("Sougata", "postRun failed", t)  // <- see real reason
             Result.Error(t.toNetworkError())
         }
     }
+
+    // Helper: sanitize a key if you can’t guarantee it’s a UID
+    private fun String.toRtdbKey(): String =
+        this.replace(".", ",")
+            .replace("#", "_")
+            .replace("$", "_")
+            .replace("[", "(")
+            .replace("]", ")")
+            .replace("/", "_")
+
 
 
     override suspend fun deleteRun(id: String): EmptyResult<DataError.Network> {
