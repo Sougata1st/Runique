@@ -113,7 +113,8 @@ private fun LoginScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             RuniqueTextField(
-                state = state.email,
+                text = state.emailId,
+                onValueChange = { onAction(LoginAction.EnteredEmail(it)) },
                 startIcon = EmailIcon,
                 endIcon = null,
                 keyboardType = KeyboardType.Email,

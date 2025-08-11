@@ -6,7 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 
 data class LoginState(
-    val email: TextFieldState = TextFieldState(),
+    val emailId: String = "",
     val password: TextFieldState = TextFieldState(),
     val isPasswordVisible: Boolean = false,
     val canLogin: Boolean = false,

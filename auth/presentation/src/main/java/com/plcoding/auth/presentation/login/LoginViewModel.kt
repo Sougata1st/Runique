@@ -8,6 +8,7 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.plcoding.auth.domain.AuthRepository
@@ -18,9 +19,12 @@ import com.plcoding.core.domain.util.Result
 import com.plcoding.core.presentation.ui.UiText
 import com.plcoding.core.presentation.ui.asUiText
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
@@ -34,8 +38,15 @@ class LoginViewModel(
     private val eventChannel = Channel<LoginEvent>()
     val events = eventChannel.receiveAsFlow()
 
+    val emailIdFlow: Flow<String> = snapshotFlow { state.emailId }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ""
+        )
+
     init {
-        combine(state.email.textAsFlow(), state.password.textAsFlow()) { email, password ->
+        combine(emailIdFlow, state.password.textAsFlow()) { email, password ->
             state = state.copy(
                 canLogin = userDataValidator.isValidEmail(
                     email = email.toString().trim()
@@ -52,6 +63,11 @@ class LoginViewModel(
                     isPasswordVisible = !state.isPasswordVisible
                 )
             }
+            is LoginAction.EnteredEmail -> {
+                state = state.copy(
+                    emailId = action.email
+                )
+            }
             else -> Unit
         }
     }
@@ -60,7 +76,7 @@ class LoginViewModel(
         viewModelScope.launch {
             state = state.copy(isLoggingIn = true)
             val result = authRepository.login(
-                email = state.email.text.toString().trim(),
+                email = state.emailId.trim(),
                 password = state.password.text.toString()
             )
             state = state.copy(isLoggingIn = false)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.plcoding.auth.domain.AuthRepository
@@ -18,9 +19,12 @@ import com.plcoding.core.domain.util.Result
 import com.plcoding.core.presentation.ui.UiText
 import com.plcoding.core.presentation.ui.asUiText
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
@@ -34,8 +38,15 @@ class RegisterViewModel(
     private val eventChannel = Channel<RegisterEvent>()
     val events = eventChannel.receiveAsFlow()
 
+    val emailIdFlow: Flow<String> = snapshotFlow { state.emailId }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = ""
+        )
+
     init {
-        state.email.textAsFlow()
+        emailIdFlow
             .onEach { email ->
                 val isValidEmail = userDataValidator.isValidEmail(email.toString())
                 state = state.copy(
@@ -66,6 +77,11 @@ class RegisterViewModel(
                     isPasswordVisible = !state.isPasswordVisible
                 )
             }
+            is RegisterAction.EnteredEmail -> {
+                state = state.copy(
+                    emailId = action.email
+                )
+            }
             else -> Unit
         }
     }
@@ -74,7 +90,7 @@ class RegisterViewModel(
         viewModelScope.launch {
             state = state.copy(isRegistering = true)
             val result = repository.register(
-                email = state.email.text.toString().trim(),
+                email = state.emailId.trim(),
                 password = state.password.text.toString()
             )
             state = state.copy(isRegistering = false)

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text2.BasicTextField2
 import androidx.compose.foundation.text2.input.TextFieldLineLimits
@@ -47,7 +48,8 @@ import com.plcoding.core.presentation.designsystem.RuniqueTheme
 
 @Composable
 fun RuniqueTextField(
-    state: TextFieldState,
+    text: String = "",
+    onValueChange: (String) -> Unit,
     startIcon: ImageVector?,
     endIcon: ImageVector?,
     hint: String,
@@ -90,15 +92,15 @@ fun RuniqueTextField(
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        BasicTextField2(
-            state = state,
+        BasicTextField(
+            value = text,
+            onValueChange = onValueChange,
             textStyle = LocalTextStyle.current.copy(
                 color = MaterialTheme.colorScheme.onBackground
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = keyboardType
             ),
-            lineLimits = TextFieldLineLimits.SingleLine,
             cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
@@ -124,7 +126,7 @@ fun RuniqueTextField(
                 .onFocusChanged {
                     isFocused = it.isFocused
                 },
-            decorator = { innerBox ->
+            decorationBox = { innerBox ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -142,7 +144,7 @@ fun RuniqueTextField(
                         modifier = Modifier
                             .weight(1f)
                     ) {
-                        if(state.text.isEmpty() && !isFocused) {
+                        if(text.isEmpty() && !isFocused) {
                             Text(
                                 text = hint,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
@@ -174,14 +176,15 @@ fun RuniqueTextField(
 private fun RuniqueTextFieldPreview() {
     RuniqueTheme {
         RuniqueTextField(
-            state = rememberTextFieldState(),
+            text = "",
             startIcon = EmailIcon,
             endIcon = CheckIcon,
             hint = "example@test.com",
             title = "Email",
             additionalInfo = "Must be a valid email",
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            onValueChange = {},
         )
     }
 }
