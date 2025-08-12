@@ -16,7 +16,9 @@ import com.plcoding.run.network.RunDto
 import com.plcoding.run.network.toCreateRunRequest
 import com.plcoding.run.network.toRun
 import com.sougata.firebase.auth.toNetworkError
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import java.util.UUID
 
 class FirebaseRemoteRunDataSource(
@@ -49,39 +51,41 @@ class FirebaseRemoteRunDataSource(
         val rawUserId = sessionStorage.get()?.userId
             ?: return Result.Error(DataError.Network.UNAUTHORIZED)
 
-        // Prefer the auth UID if you can store it in session:
-        // val userId = firebaseAuth.currentUser?.uid ?: return Result.Error(DataError.Network.UNAUTHORIZED)
-
-        // Otherwise sanitize keys for RTDB (avoid ., #, $, [, ], /)
         val userId = rawUserId.toRtdbKey()
 
         return try {
-            val runsRef = db.reference.child(userId).child("Runs")
+            // Wrap the entire operation in withTimeout
+            withTimeout(5000L) { // 5 seconds timeout
+                val runsRef = db.reference.child(userId).child("Runs")
 
-            val runId = if (run.id.isNullOrBlank()) {
-                java.util.UUID.randomUUID().toString()
-            } else run.id!!
+                val runId = if (run.id.isNullOrBlank()) {
+                    java.util.UUID.randomUUID().toString()
+                } else run.id!!
 
-            // upload image
-            val imageRef = storage.reference
-                .child("runs")
-                .child(userId)
-                .child("$runId.png")
+                // upload image
+                val imageRef = storage.reference
+                    .child("runs")
+                    .child(userId)
+                    .child("$runId.png")
 
-            val metadata = com.google.firebase.storage.StorageMetadata.Builder()
-                .setContentType("image/png")
-                .build()
+                val metadata = com.google.firebase.storage.StorageMetadata.Builder()
+                    .setContentType("image/png")
+                    .build()
 
-            imageRef.putBytes(mapPicture, metadata).await()
-            val imageUrl = imageRef.downloadUrl.await().toString()
+                imageRef.putBytes(mapPicture, metadata).await()
+                val imageUrl = imageRef.downloadUrl.await().toString()
 
-            // write dto
-            val dto = run.toCreateRunRequest(mapPictureUrl = imageUrl).copy(id = runId)
-            runsRef.child(runId).setValue(dto).await()
+                // write dto
+                val dto = run.toCreateRunRequest(mapPictureUrl = imageUrl).copy(id = runId)
+                runsRef.child(runId).setValue(dto).await()
 
-            Result.Success(dto.toRun() ?: run.copy(id = runId))
+                Result.Success(dto.toRun() ?: run.copy(id = runId))
+            }
+        } catch (e: TimeoutCancellationException) {
+            android.util.Log.e("Sougata", "postRun timed out after 5 seconds", e)
+            Result.Error(DataError.Network.REQUEST_TIMEOUT)
         } catch (t: Throwable) {
-            android.util.Log.e("Sougata", "postRun failed", t)  // <- see real reason
+            android.util.Log.e("Sougata", "postRun failed", t)
             Result.Error(t.toNetworkError())
         }
     }
