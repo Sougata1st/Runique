@@ -19,21 +19,6 @@ Runique is a multi-module running tracker app built using **Jetpack Compose** wi
 
 ---
 
-## ⚠️ Disclaimer
-
-To start the backend, follow these steps:
-
-- **Hit the Backend URL**:  
-  👉 [Runique Backend on Render](https://runrequest-service.onrender.com)
-
-- **Run the Backend Class File**:  
-  👉 [Download `ConcurrentApiCaller` Class](https://drive.google.com/file/d/1NR6pQlaEMbLLXzMvfd08MzsvZu6w5Q4D/view?usp=sharing)
-  ```bash
-  java ConcurrentApiCaller
-  ```
-> **Note**: The backend is hosted on **Render's free service** and may take a few minutes to wake up if inactive.
-
----
 
 ## 🧑‍💻 Project Overview
 
